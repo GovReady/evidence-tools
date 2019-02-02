@@ -4,7 +4,7 @@
 #
 # eu.py - evidence uploader
 #
-# Usage: show-repos.py [-h] --file screenshot.png
+# Usage: eu.py [-h] --file screenshot.png
 #
 # Required argument:
 #   --file screenshot.png  path to an evidence file to upload
