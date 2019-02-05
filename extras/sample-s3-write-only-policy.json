@@ -17,8 +17,8 @@
                 "s3:PutObjectTagging"
             ],
             "Resource": [
-                "arn:aws:s3:::govready-evidence-qb9zxvylp8dluv5bcg1exb/*",
-                "arn:aws:s3:::govready-evidence-qb9zxvylp8dluv5bcg1exb"
+                "arn:aws:s3:::govready-es-srv-01/*",
+                "arn:aws:s3:::govready-es-srv-01"
             ]
         }
     ]
