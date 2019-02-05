@@ -2,8 +2,6 @@
 
 Uploads an evidence file to an S3 bucket.
 
-Currently broken, returns `403 Forbidden`. Cause under investigation.
-
 ### Script Setup
 
 * clone repo, cd to its directory
