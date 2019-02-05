@@ -36,7 +36,7 @@ signal.signal(signal.SIGINT, lambda signal_number, current_stack_frame: sys.exit
 
 # Set up argparse
 def init_argparse():
-    parser = argparse.ArgumentParser(description='Downloads evidence from an S3 bucket.')
+    parser = argparse.ArgumentParser(description='Downloads evidence from an S3 bucket. If no file is specified with "-f", prints the names of all files in the bucket.')
     parser.add_argument('-b', '--bucket', required=True, help='name of source bucket')
     parser.add_argument('-f', '--file', help='path to an evidence file to upload')
     return parser
