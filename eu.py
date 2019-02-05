@@ -36,6 +36,7 @@ def init_argparse():
     parser = argparse.ArgumentParser(description='Uploads evidence to an S3 bucket.')
     parser.add_argument('-b', '--bucket', required=True, help='name of destination bucket')
     parser.add_argument('-f', '--file', required=True, help='path to an evidence file to upload')
+    parser.add_argument('-m', '--metadata', action='append', help='metadata in KEY=VALUE form; okay to specify multiple times')
     return parser
 
 # Extracts basename of a given path. Should Work with any OS Path on any OS
@@ -53,11 +54,21 @@ def main():
     s3_bucket = 'govready-evidence-qb9zxvylp8dluv5bcg1exb'
 
     # make s3 connection
-    s3 = boto3.resource('s3')
+    s3 = boto3.client('s3')
+
+    # get metadata key/value pairs
+    metadata = {}
+    for m in args.metadata:
+        k, v = m.split('=', 2)
+        metadata.update({k:v})
 
     # upload file
     try:
-        s3.Object(args.bucket, extract_basename(args.file)).put(Body=open(args.file, 'rb'))
+        s3.upload_file(
+            args.file, args.bucket, extract_basename(args.file),
+            ExtraArgs={"Metadata": metadata}
+        )
+
     except Exception as e:
         print(e)
         
