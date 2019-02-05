@@ -54,18 +54,23 @@ def main():
     s3 = boto3.client('s3')
 
     # get metadata key/value pairs
-    metadata = {}
-    for m in args.metadata:
-        k, v = m.split('=', 2)
-        metadata.update({k:v})
+    if args.metadata is not None:
+        metadata = {}
+        for m in args.metadata:
+            k, v = m.split('=', 2)
+            metadata.update({k:v})
 
     # upload file
     try:
-        s3.upload_file(
-            args.file, args.bucket, extract_basename(args.file),
-            ExtraArgs={"Metadata": metadata}
-        )
-
+        if args.metadata is None:
+            s3.upload_file(
+                args.file, args.bucket, extract_basename(args.file)
+            )
+        else:
+            s3.upload_file(
+                args.file, args.bucket, extract_basename(args.file),
+                ExtraArgs={"Metadata": metadata}
+            )
     except Exception as e:
         print(e)
         
