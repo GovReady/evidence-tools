@@ -7,8 +7,8 @@
 # Usage: eu.py [-h] --bucket my-evidence-bucket --file screenshot.png
 #
 # Required argument:
-#   --bucket my-evidence-bucket  name of destination bucket
-#   --file screenshot.png  path to an evidence file to upload
+#   -b, --bucket  my-evidence-bucket  name of destination bucket
+#   -f, --file  screenshot.png  path to an evidence file to upload
 #
 # Optional argument:
 #   -h, --help   show this help message and exit
