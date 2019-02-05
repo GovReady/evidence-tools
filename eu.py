@@ -50,9 +50,6 @@ def main():
     argparser = init_argparse();
     args = argparser.parse_args();
 
-    # point to bucket
-    s3_bucket = 'govready-evidence-qb9zxvylp8dluv5bcg1exb'
-
     # make s3 connection
     s3 = boto3.client('s3')
 
