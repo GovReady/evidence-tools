@@ -14,8 +14,9 @@ Currently broken, returns `403 Forbidden`. Cause under investigation.
 ### AWS Setup
 
 * Set up S3 bucket, bucket policy, and IAM user.  See [example policy](extras/sample-s3-policy.json), apply it to a user.
-* Edit `eu.py` to include access key ID and secret access key of user.
+* Copy `env.sh-template` to `env.sh` and edit to include access key ID and secret access key of user.
 
 ### Run Script
 
-* `./eu.py -f extras/sample-image/image.png`
+* `source env.sh`
+* `./eu.py -b govready-evidence-qb9zxvylp8dluv5bcg1exb -f extras/sample-image/image.png`

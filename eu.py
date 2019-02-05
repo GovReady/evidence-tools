@@ -4,9 +4,10 @@
 #
 # eu.py - evidence uploader
 #
-# Usage: eu.py [-h] --file screenshot.png
+# Usage: eu.py [-h] --bucket my-evidence-bucket --file screenshot.png
 #
 # Required argument:
+#   --bucket my-evidence-bucket  name of destination bucket
 #   --file screenshot.png  path to an evidence file to upload
 #
 # Optional argument:
@@ -24,8 +25,8 @@ import argparse
 # regular expressions
 import re
 
-# S3 interface
-import tinys3
+# AWS/S3 interface
+import boto3
 
 # Gracefully exit on control-C
 signal.signal(signal.SIGINT, lambda signal_number, current_stack_frame: sys.exit(0))
@@ -33,6 +34,7 @@ signal.signal(signal.SIGINT, lambda signal_number, current_stack_frame: sys.exit
 # Set up argparse
 def init_argparse():
     parser = argparse.ArgumentParser(description='Uploads evidence to an S3 bucket.')
+    parser.add_argument('-b', '--bucket', required=True, help='name of destination bucket')
     parser.add_argument('-f', '--file', required=True, help='path to an evidence file to upload')
     return parser
 
@@ -47,18 +49,17 @@ def main():
     argparser = init_argparse();
     args = argparser.parse_args();
 
-    # set credentials
-    s3_access_key = 'AKIAIAHTTVOVCT5ZGIHQ'
-    s3_secret_key = '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'
+    # point to bucket
     s3_bucket = 'govready-evidence-qb9zxvylp8dluv5bcg1exb'
 
     # make s3 connection
-    s3 = tinys3.Connection(s3_access_key, s3_secret_key, default_bucket=s3_bucket, tls=True)
+    s3 = boto3.resource('s3')
 
     # upload file
-    f = open(args.file,'rb')
-    s3.upload(extract_basename(args.file),f)
-    f.close()
-
+    try:
+        s3.Object(args.bucket, extract_basename(args.file)).put(Body=open(args.file, 'rb'))
+    except Exception as e:
+        print(e)
+        
 if __name__ == "__main__":
     exit(main())
