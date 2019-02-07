@@ -37,6 +37,7 @@ def init_argparse():
     parser.add_argument('-b', '--bucket', required=True, help='name of destination bucket')
     parser.add_argument('-f', '--file', required=True, help='path to an evidence file to upload')
     parser.add_argument('-m', '--metadata', action='append', help='metadata in KEY=VALUE form; okay to specify multiple times')
+    parser.add_argument('--strip', help='dirpath to strip, instead of stripping entire dirpath')
     return parser
 
 # Extracts basename of a given path. Should Work with any OS Path on any OS
@@ -62,13 +63,17 @@ def main():
 
     # upload file
     try:
+        if args.strip is None:
+            upload_name = extract_basename(args.file)
+        else:
+            upload_name = args.file[len(args.strip):] if args.file.startswith(args.strip) else args.file
         if args.metadata is None:
             s3.upload_file(
-                args.file, args.bucket, extract_basename(args.file)
+                args.file, args.bucket, upload_name
             )
         else:
             s3.upload_file(
-                args.file, args.bucket, extract_basename(args.file),
+                args.file, args.bucket, upload_name,
                 ExtraArgs={"Metadata": metadata}
             )
     except Exception as e:
