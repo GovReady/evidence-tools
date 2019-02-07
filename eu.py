@@ -6,12 +6,15 @@
 #
 # Usage: eu.py [-h] --bucket my-evidence-bucket --file screenshot.png
 #
-# Required argument:
+# Required arguments:
 #   -b, --bucket  my-evidence-bucket  name of destination bucket
 #   -f, --file  screenshot.png  path to an evidence file to upload
+#   --family  category for evidence file (AC, AT, AU, CM, etc.)
 #
-# Optional argument:
+# Optional arguments:
 #   -h, --help   show this help message and exit
+#   -m, --metadata  metadata in KEY=VALUE form; okay to specify multiple times
+#   --strip  dirpath to strip, instead of stripping entire dirpath
 #
 ################################################################
 
@@ -36,6 +39,7 @@ def init_argparse():
     parser = argparse.ArgumentParser(description='Uploads evidence to an S3 bucket.')
     parser.add_argument('-b', '--bucket', required=True, help='name of destination bucket')
     parser.add_argument('-f', '--file', required=True, help='path to an evidence file to upload')
+    parser.add_argument('--family', required=True, help='category for evidence file (AC, AT, AU, CM, etc.)')
     parser.add_argument('-m', '--metadata', action='append', help='metadata in KEY=VALUE form; okay to specify multiple times')
     parser.add_argument('--strip', help='dirpath to strip, instead of stripping entire dirpath')
     return parser
@@ -61,12 +65,17 @@ def main():
             k, v = m.split('=', 2)
             metadata.update({k:v})
 
+    # strip dirpath
+    if args.strip is None:
+        upload_name = extract_basename(args.file)
+    else:
+        upload_name = args.file[len(args.strip):] if args.file.startswith(args.strip) else args.file
+
+    # add family
+    upload_name = "{}/{}".format(args.family, upload_name)
+
     # upload file
     try:
-        if args.strip is None:
-            upload_name = extract_basename(args.file)
-        else:
-            upload_name = args.file[len(args.strip):] if args.file.startswith(args.strip) else args.file
         if args.metadata is None:
             s3.upload_file(
                 args.file, args.bucket, upload_name
