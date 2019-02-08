@@ -12,6 +12,7 @@
 # Optional arguments:
 #   -h, --help  show this help message and exit
 #   --file screenshot.png  name of an evidence file to download
+#   --url  generate a pre-signed URL for the evidence file, times out in 120
 #
 ################################################################
 
@@ -30,6 +31,7 @@ import os
 
 # AWS/S3 interface
 import boto3
+from botocore.client import Config
 
 # Gracefully exit on control-C
 signal.signal(signal.SIGINT, lambda signal_number, current_stack_frame: sys.exit(0))
@@ -38,7 +40,8 @@ signal.signal(signal.SIGINT, lambda signal_number, current_stack_frame: sys.exit
 def init_argparse():
     parser = argparse.ArgumentParser(description='Downloads evidence from an S3 bucket. If no file is specified with "-f", prints the names of all files in the bucket.')
     parser.add_argument('-b', '--bucket', required=True, help='name of source bucket')
-    parser.add_argument('-f', '--file', help='path to an evidence file to upload')
+    parser.add_argument('-f', '--file', help='path to an evidence file to download')
+    parser.add_argument('--url', action='store_true', help='generate a pre-signed URL for the evidence file')
     return parser
 
 def main():
@@ -46,10 +49,10 @@ def main():
     args = argparser.parse_args();
 
     # make s3 connection
-    s3 = boto3.client('s3')
+    s3 = boto3.client('s3', 'us-east-1', config=Config(s3={'addressing_style': 'path'},signature_version='s3v4'))
 
     # if no file specified, list bucket contents
-    if (args.file is None):
+    if args.file is None:
         try:
             response = s3.list_objects(Bucket=args.bucket)
             for object in response['Contents']:
@@ -60,16 +63,28 @@ def main():
         except Exception as e:
             print(e)
     else:
-        # download file
-        # TODO: allow user to specify destination directory, and "overwrite" option
-        try:
-            if os.path.exists(args.file):
-                raise Exception("Download cancelled: file '{}' exists.".format(args.file))
-            s3.download_file(
-                args.bucket, args.file, args.file
+        if args.url:
+            # generate pre-signed URL
+            url = s3.generate_presigned_url(
+                ClientMethod='get_object',
+                Params={
+                    'Bucket': args.bucket,
+                    'Key': args.file
+                },
+                ExpiresIn=120 # seconds
             )
-        except Exception as e:
-            print(e)
+            print(url)
+        else:
+            # download file
+            # TODO: allow user to specify destination directory, and "overwrite" option
+            try:
+                if os.path.exists(args.file):
+                    raise Exception("Download cancelled: file '{}' exists.".format(args.file))
+                s3.download_file(
+                    args.bucket, args.file, args.file
+                )
+            except Exception as e:
+                print(e)
         
 if __name__ == "__main__":
     exit(main())
