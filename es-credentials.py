@@ -136,9 +136,13 @@ def confirm_or_create_policy(iam, args):
                 arn = policy["Arn"]
         if arn is None:
             # policy was not found; let's create it
+            iam_policy_bucket_read["Statement"][1]["Resource"] = [
+                "arn:aws:s3:::{}/*".format(args.bucket),
+                "arn:aws:s3:::{}".format(args.bucket)
+                ]
             response = iam.create_policy(
                 PolicyName=args.policy,
-                PolicyDocument=str(iam_policy_bucket_read)
+                PolicyDocument=str(iam_policy_bucket_read).replace("'",'"')
                 )
             if response["ResponseMetadata"]["HTTPStatusCode"] is not 200:
                 print(response)
@@ -168,7 +172,15 @@ def main():
     arn = confirm_or_create_policy(iam, args)
         
     # make sure user exists
-
+    response = iam.create_user(
+        UserName=args.user,
+        Tags=[
+            {
+                'Key':'created-by',
+                'Value':'govready:es-credentials'
+                }
+            ]
+        )
 
 if __name__ == "__main__":
     exit(main())
