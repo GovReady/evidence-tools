@@ -121,6 +121,15 @@ def confirm_or_create_bucket(aws_region, s3, bucket_name):
                 if response["ResponseMetadata"]["HTTPStatusCode"] is not 200:
                     print(response)
                     print("Error: bucket creation failed.")
+                response = s3.put_public_access_block(
+                    Bucket=bucket_name,
+                    PublicAccessBlockConfiguration={
+                        'BlockPublicAcls': True,
+                        'IgnorePublicAcls': True,
+                        'BlockPublicPolicy': True,
+                        'RestrictPublicBuckets': True
+                        }
+                    )
             except Exception as e:
                 print(e)
         else:
