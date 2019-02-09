@@ -36,6 +36,56 @@ from botocore.exceptions import ClientError
 # Gracefully exit on control-C
 signal.signal(signal.SIGINT, lambda signal_number, current_stack_frame: sys.exit(0))
 
+# IAM policies
+
+iam_policy_bucket_read = {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": "s3:ListAllMyBuckets",
+            "Resource": "*"
+        },
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket",
+                "s3:GetObject",
+                "s3:GetObjectAcl",
+                "s3:GetObjectTagging"
+            ],
+            "Resource": [
+            ]
+        }
+    ]
+}
+
+iam_policy_bucket_write = {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": "s3:ListAllMyBuckets",
+            "Resource": "*"
+        },
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket",
+                "s3:PutObject",
+                "s3:PutObjectAcl",
+                "s3:PutObjectTagging"
+            ],
+            "Resource": [
+            ]
+        }
+    ]
+}
+
 # Set up argparse
 def init_argparse():
     parser = argparse.ArgumentParser(description='Sets up credentials for evidence server.')
@@ -86,11 +136,9 @@ def confirm_or_create_policy(iam, args):
                 arn = policy["Arn"]
         if arn is None:
             # policy was not found; let's create it
-            with open('security-policies/iam_policy_bucket_read.json', 'r') as f:
-                policy_document = f.read()
             response = iam.create_policy(
                 PolicyName=args.policy,
-                PolicyDocument=policy_document
+                PolicyDocument=str(iam_policy_bucket_read)
                 )
             if response["ResponseMetadata"]["HTTPStatusCode"] is not 200:
                 print(response)
@@ -99,7 +147,6 @@ def confirm_or_create_policy(iam, args):
     except Exception as e:
         print(e)
     return arn
-
 
 def main():
     argparser = init_argparse();
@@ -120,5 +167,8 @@ def main():
     # make sure policy exists
     arn = confirm_or_create_policy(iam, args)
         
+    # make sure user exists
+
+
 if __name__ == "__main__":
     exit(main())
