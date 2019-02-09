@@ -15,9 +15,8 @@
 #   -p, --policy  evidence-server-01-policy  name of policy
 #
 # Optional arguments (need at least one of -r or -w):
-#   -h, --help   show this help message and exit
-#   -r, --read  include read permission in policy
-#   -w, --write  include write permission in policy
+#   -h, --help    show this help message and exit
+#   -a, --access  access permissions to include in policy: r, w, or rw
 #   -u, --user USERNAME  create a user
 #
 ################################################################
@@ -38,7 +37,8 @@ signal.signal(signal.SIGINT, lambda signal_number, current_stack_frame: sys.exit
 
 # IAM policies
 
-iam_policy_bucket_read = {
+iam_policies = {
+"r":{
     "Version": "2012-10-17",
     "Statement": [
         {
@@ -60,9 +60,8 @@ iam_policy_bucket_read = {
             ]
         }
     ]
-}
-
-iam_policy_bucket_write = {
+},
+"w":{
     "Version": "2012-10-17",
     "Statement": [
         {
@@ -84,6 +83,33 @@ iam_policy_bucket_write = {
             ]
         }
     ]
+},
+"rw":{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": "s3:ListAllMyBuckets",
+            "Resource": "*"
+        },
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket",
+                "s3:GetObject",
+                "s3:GetObjectAcl",
+                "s3:GetObjectTagging",
+                "s3:PutObject",
+                "s3:PutObjectAcl",
+                "s3:PutObjectTagging"
+            ],
+            "Resource": [
+            ]
+        }
+    ]
+}
 }
 
 # Set up argparse
@@ -91,9 +117,7 @@ def init_argparse():
     parser = argparse.ArgumentParser(description='Sets up credentials for evidence server.')
     parser.add_argument('-b', '--bucket', required=True, help='name of evidence server bucket')
     parser.add_argument('-p', '--policy', required=True, help='name of policy')
-    rw_group = parser.add_mutually_exclusive_group(required=True)
-    rw_group.add_argument('-r', '--read', action='store_true', help='include read permission in policy')
-    rw_group.add_argument('-w', '--write', action='store_true', help='include write permission in policy')
+    parser.add_argument('-a', '--access', help='access permissions to include in policy: r, w, or rw')
     parser.add_argument('-u', '--user', help='name of user')
     # TODO: consider specifying descriptions and tags
     return parser
@@ -145,18 +169,22 @@ def confirm_or_create_policy(iam, args):
                 arn = policy["Arn"]
         if arn is None:
             # policy was not found; let's create it
-            iam_policy_bucket_read["Statement"][1]["Resource"] = [
-                "arn:aws:s3:::{}/*".format(args.bucket),
-                "arn:aws:s3:::{}".format(args.bucket)
-                ]
-            response = iam.create_policy(
-                PolicyName=args.policy,
-                PolicyDocument=str(iam_policy_bucket_read).replace("'",'"')
-                )
-            if response["ResponseMetadata"]["HTTPStatusCode"] is not 200:
-                print(response)
-                print("Error: policy creation failed.")
-            arn = response["Policy"]["Arn"]
+            if args.access in iam_policies.keys():
+                iam_policy = iam_policies[args.access]
+                iam_policy["Statement"][1]["Resource"] = [
+                    "arn:aws:s3:::{}/*".format(args.bucket),
+                    "arn:aws:s3:::{}".format(args.bucket)
+                    ]
+                response = iam.create_policy(
+                    PolicyName=args.policy,
+                    PolicyDocument=str(iam_policy).replace("'",'"')
+                    )
+                if response["ResponseMetadata"]["HTTPStatusCode"] is not 200:
+                    print(response)
+                    print("Error: policy creation failed.")
+                arn = response["Policy"]["Arn"]
+            else:
+                print("Error: '--access' must be one of r, w, or rw.")
     except Exception as e:
         print(e)
     return arn
