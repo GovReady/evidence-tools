@@ -172,14 +172,26 @@ def main():
     arn = confirm_or_create_policy(iam, args)
         
     # make sure user exists
-    response = iam.create_user(
+    try:
+        response = iam.create_user(
+            UserName=args.user,
+            Tags=[
+                {
+                    'Key':'created-by',
+                    'Value':'govready:es-credentials'
+                    }
+                ]
+            )
+    except ClientError as e:
+        if e.response["Error"]["Code"] == 'EntityAlreadyExists':
+            pass
+        else:
+            print(e)
+
+    # attach policy
+    response = iam.attach_user_policy(
         UserName=args.user,
-        Tags=[
-            {
-                'Key':'created-by',
-                'Value':'govready:es-credentials'
-                }
-            ]
+        PolicyArn=arn
         )
 
 if __name__ == "__main__":
