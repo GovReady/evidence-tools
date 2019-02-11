@@ -160,9 +160,9 @@ def confirm_or_create_bucket(aws_region, s3, bucket_name):
             print(e)
 
 def confirm_or_create_policy(iam, args):
+    arn = None
     try:
         response = iam.list_policies(Scope='Local')
-        arn = None
         # TODO: use NextMarker to retrieve more than one page
         for policy in response["Policies"]:
             if policy["PolicyName"] == args.policy:
@@ -234,10 +234,16 @@ def main():
             print(e)
 
     # attach policy
-    response = iam.attach_user_policy(
-        UserName=args.user,
-        PolicyArn=arn
-        )
+    if arn is None:
+        print("ERROR: Can't attach policy: no policy exists.")
+    else:
+        try:
+            response = iam.attach_user_policy(
+                UserName=args.user,
+                PolicyArn=arn
+                )
+        except ClientError as e:
+            print(e)
 
 if __name__ == "__main__":
     exit(main())
