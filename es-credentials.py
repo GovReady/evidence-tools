@@ -204,13 +204,11 @@ def main():
     sts = boto3.client('sts')
 
     # check API identity
+    # TODO: get the account alias, too: http://boto.readthedocs.org/en/latest/ref/iam.html#boto.iam.connection.IAMConnection.get_account_alias
     response = sts.get_caller_identity()
     my_identity_account = response["Account"]
-    my_identity_arn = response["Arn"]
-    # TODO: get the account alias, too: http://boto.readthedocs.org/en/latest/ref/iam.html#boto.iam.connection.IAMConnection.get_account_alias
-#    my_identity_account_alias = response[
-    print(my_identity_account, my_identity_arn)
-    exit(0)
+    my_identity_arn = response["Arn"].replace("arn:aws:iam::{}:user/".format(my_identity_account),"")
+    sys.stderr.write('Using account #{}, user "{}".\n'.format(my_identity_account, my_identity_arn))
 
     # make sure bucket exists
     confirm_or_create_bucket(aws_region, s3, args.bucket)
