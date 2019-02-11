@@ -201,6 +201,16 @@ def main():
     aws_region = 'us-east-1'
     iam = boto3.client('iam')
     s3 = boto3.client('s3', aws_region)
+    sts = boto3.client('sts')
+
+    # check API identity
+    response = sts.get_caller_identity()
+    my_identity_account = response["Account"]
+    my_identity_arn = response["Arn"]
+    # TODO: get the account alias, too: http://boto.readthedocs.org/en/latest/ref/iam.html#boto.iam.connection.IAMConnection.get_account_alias
+#    my_identity_account_alias = response[
+    print(my_identity_account, my_identity_arn)
+    exit(0)
 
     # make sure bucket exists
     confirm_or_create_bucket(aws_region, s3, args.bucket)
