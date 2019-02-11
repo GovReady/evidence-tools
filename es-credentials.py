@@ -10,14 +10,17 @@
 #   ./es-credentials.py -a r -b govready-es-srv-01 -p govready-es-srv-01+read -u govready-es-srv-01+read
 #   ./es-credentials.py -a w -b govready-es-srv-01 -p govready-es-srv-01+write -u govready-es-srv-01+write
 #
+# Creates bucket, policy, user, and access key, or uses existing ones if
+# they already exist.  Prints user's access key ID and secret key to STDOUT.
+#
 # Required arguments:
 #   -b, --bucket  evidence-server-01  name of evidence server bucket
 #   -p, --policy  evidence-server-01-policy  name of policy
-#
-# Optional arguments (need at least one of -r or -w):
-#   -h, --help    show this help message and exit
 #   -a, --access  access permissions to include in policy: r, w, or rw
-#   -u, --user USERNAME  create a user
+#   -u, --user USERNAME  user to create
+#
+# Optional arguments:
+#   -h, --help    show this help message and exit
 #
 ################################################################
 
@@ -244,6 +247,17 @@ def main():
                 )
         except ClientError as e:
             print(e)
+
+    # create access key
+    try:
+        response = iam.create_access_key(
+            UserName=args.user
+            )
+        print("# for Windows, use 'set' instead of 'export'")
+        print("export AWS_ACCESS_KEY_ID={}".format(response["AccessKey"]["AccessKeyId"]))
+        print("export AWS_SECRET_ACCESS_KEY={}".format(response["AccessKey"]["SecretAccessKey"]))
+    except ClientError as e:
+        print(e)
 
 if __name__ == "__main__":
     exit(main())
