@@ -7,8 +7,8 @@
 # Usage: es-credentials.py [-h] --bucket evidence-server-01
 #
 # Examples:
-#   ./es-credentials.py -r -b govready-es-srv-01 -p govready-es-srv-01+read -u govready-es-srv-01+read
-#   ./es-credentials.py -w -b govready-es-srv-01 -p govready-es-srv-01+write -u govready-es-srv-01+write
+#   ./es-credentials.py -a r -b govready-es-srv-01 -p govready-es-srv-01+read -u govready-es-srv-01+read
+#   ./es-credentials.py -a w -b govready-es-srv-01 -p govready-es-srv-01+write -u govready-es-srv-01+write
 #
 # Required arguments:
 #   -b, --bucket  evidence-server-01  name of evidence server bucket
