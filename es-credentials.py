@@ -146,8 +146,8 @@ def confirm_or_create_bucket(aws_region, s3, bucket_name):
                             }
                         )
                 if response["ResponseMetadata"]["HTTPStatusCode"] is not 200:
-                    print(response)
-                    print("Error: bucket creation failed.")
+                    sys.stderr.write("{}\n".format(response))
+                    sys.stderr.write("Error: bucket creation failed.\n")
                 response = s3.put_public_access_block(
                     Bucket=bucket_name,
                     PublicAccessBlockConfiguration={
@@ -158,9 +158,9 @@ def confirm_or_create_bucket(aws_region, s3, bucket_name):
                         }
                     )
             except Exception as e:
-                print(e)
+                sys.stderr.write("{}\n".format(e))
         else:
-            print(e)
+            sys.stderr.write("{}\n".format(e))
 
 def confirm_or_create_policy(iam, args):
     arn = None
@@ -183,13 +183,13 @@ def confirm_or_create_policy(iam, args):
                     PolicyDocument=str(iam_policy).replace("'",'"')
                     )
                 if response["ResponseMetadata"]["HTTPStatusCode"] is not 200:
-                    print(response)
-                    print("Error: policy creation failed.")
+                    sys.stderr.write("{}\n".format(response))
+                    sys.stderr.write("Error: policy creation failed.\n")
                 arn = response["Policy"]["Arn"]
             else:
-                print("Error: '--access' must be one of r, w, or rw.")
+                sys.stderr.write("Error: '--access' must be one of r, w, or rw.\n")
     except Exception as e:
-        print(e)
+        sys.stderr.write("{}\n".format(e))
     return arn
 
 def main():
@@ -234,11 +234,11 @@ def main():
         if e.response["Error"]["Code"] == 'EntityAlreadyExists':
             pass
         else:
-            print(e)
+            sys.stderr.write("{}\n".format(e))
 
     # attach policy
     if arn is None:
-        print("ERROR: Can't attach policy: no policy exists.")
+        sys.stderr.write("ERROR: Can't attach policy: no policy exists.\n")
     else:
         try:
             response = iam.attach_user_policy(
@@ -246,7 +246,7 @@ def main():
                 PolicyArn=arn
                 )
         except ClientError as e:
-            print(e)
+            sys.stderr.write("{}\n".format(e))
 
     # create access key
     try:
@@ -257,7 +257,7 @@ def main():
         print("export AWS_ACCESS_KEY_ID={}".format(response["AccessKey"]["AccessKeyId"]))
         print("export AWS_SECRET_ACCESS_KEY={}".format(response["AccessKey"]["SecretAccessKey"]))
     except ClientError as e:
-        print(e)
+        sys.stderr.write("{}\n".format(e))
 
 if __name__ == "__main__":
     exit(main())
