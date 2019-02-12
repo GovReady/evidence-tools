@@ -6,13 +6,18 @@
 #
 # Usage: ed.py [-h] --bucket my-evidence-bucket [--file screenshot.png]
 #
+# With `--file`, downloads the specified file from the bucket.
+# Without `--file`, lists all the files in the bucket.  With
+# `--metadata`, prints metadata for the file or files to STDOUT.
+#
 # Required argument:
 #   -b, --bucket  my-evidence-bucket  name of source bucket
 #
 # Optional arguments:
 #   -h, --help  show this help message and exit
-#   --file screenshot.png  name of an evidence file to download
-#   --url  generate a pre-signed URL for the evidence file, times out in 120
+#   -f, --file  screenshot.png  name of an evidence file to download
+#   -m, --metadata  print metadata for the file or files
+#   --url  generate a pre-signed URL for the evidence file, expires in 120 seconds
 #
 ################################################################
 
@@ -41,6 +46,7 @@ def init_argparse():
     parser = argparse.ArgumentParser(description='Downloads evidence from an S3 bucket. If no file is specified with "-f", prints the names of all files in the bucket.')
     parser.add_argument('-b', '--bucket', required=True, help='name of source bucket')
     parser.add_argument('-f', '--file', help='path to an evidence file to download')
+    parser.add_argument('-m', '--metadata', action='store_true', help='print metadata for the file or files')
     parser.add_argument('--url', action='store_true', help='generate a pre-signed URL for the evidence file')
     return parser
 
@@ -57,6 +63,9 @@ def main():
             response = s3.list_objects(Bucket=args.bucket)
             for object in response['Contents']:
                 print(object['Key'])
+                if args.metadata:
+                    response2 = s3.head_object(Bucket=args.bucket, Key=object['Key'])
+                    print('#', response2['Metadata'])
             # TODO: replace IsTruncated warning with a NextMarker continuation loop
             if response['IsTruncated']:
                 sys.stderr.write("WARNING: List truncated at {} objects.\n".format(response['MaxKeys']))
@@ -83,6 +92,9 @@ def main():
                 s3.download_file(
                     args.bucket, args.file, args.file
                 )
+                if args.metadata:
+                    response = s3.head_object(Bucket=args.bucket, Key=args.file)
+                    print('#', response['Metadata'])
             except Exception as e:
                 print(e)
         
